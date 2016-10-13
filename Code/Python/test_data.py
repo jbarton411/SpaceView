@@ -11,8 +11,8 @@ from Adafruit_BMP import BMP085
 import Adafruit_LSM303 as LSM303
 
 # Constants
-debug = 1
-override_log = 1
+DEBUG = 1
+OVERRIDE_LOG = 1 # captalize?
 
 # Sensor initialization
 accelSensor = LSM303.LSM303()
@@ -20,7 +20,7 @@ tempSensor = BMP085.BMP085()
 
 # Open a new file to store our info in
 filename = "LOG00.csv"
-if not override_log:
+if not OVERRIDE_LOG:
 	filename_l = list(filename)
 	for n in range (0, 100):
 		filename_l[3] = str(0 + n/10)
@@ -30,7 +30,7 @@ if not override_log:
 			break
 	filename = "".join(filename_l)
 logfile = open(filename, "w")
-if debug:
+if DEBUG:
 	print "Log file created! Log name: ", filename
 
 

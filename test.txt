@@ -1,8 +1,0 @@
-BUILD FILES:
-
-So to do what we are attempting, we need a few things…
-
-Arduino Mega 2560
-Ultimate GPS Datalogger
-APRS Module
-Power Supply (8 AA batteries + Case)
