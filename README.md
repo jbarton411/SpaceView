@@ -15,3 +15,18 @@ To push:
 cd ~/Documents/SpaceView/
 git push 
 
+
+In order to run SpaceView.ino, you must install the free Arduino IDE:
+https://www.arduino.cc/en/Main/Software
+
+Also, you must download the necessary libraries:
+Arduino->Sketch->Include Library->Manage Libraries...
+
+Search and install the following libraries:
+    Adafruit BMP085 Unified
+    Adafruit L3GD20 Unified
+    Adafruit LSM303 Unified
+    Adafruit Sensor
+    
+
+
