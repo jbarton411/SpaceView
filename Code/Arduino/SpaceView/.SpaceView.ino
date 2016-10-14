@@ -1,18 +1,28 @@
+
+// Arduino includes
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
 #include <SoftwareSerial.h>
 
+// Our includes
 #include <Adafruit_GPS.h>
+#include <Adafruit_LSM303_U.h>
+#include <Adafruit_BMP085_U.h>
+#include <Adafruit_L3GD20_U.h>
 #include <Adafruit_10DOF.h>
 
+// Constants: pins
 #define tonePin 6
-#define errorFrequency 440 //Concert A
 #define chipSelect 10
 #define ledPin 13
 
-
+// Constants: config
 #define debug 1
+#define override_log = 1
+
+// Constants: other
+#define errorFrequency 440 //Concert A
 
 typedef enum {
   SENSOR_INIT = 1,
@@ -30,10 +40,12 @@ Adafruit_BMP085_Unified* bmp;
 Adafruit_L3GD20_Unified* gyro;
 
 SoftwareSerial mySerial(8, 7);
-Adafruit_GPS GPS(&mySerial);
+Adafruit_GPS gps(&mySerial);
 
 File logfile;
 float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;
+
+String now, latitude, longitude, altitude, pressure, temperature, accel, accel_x, accel_y, accel_z;
 
 void setup() {
   // Sensor initialization:
@@ -58,43 +70,78 @@ void setup() {
     }
     
   // Opening file for log
-    char filename[13] = "GPSLOG00.csv";
+    String filename = "LOG00.csv";
     for (uint8_t i = 0; i < 100; i++) {
-      filename[6] = '0' + i/10;
-      filename[7] = '0' + i%10;
+      filename[3] = '0' + i/10;
+      filename[4] = '0' + i%10;
       // create if does not exist, do not open existing, write, sync after write
       if (!SD.exists(filename)) break;
     }
     logfile = SD.open(filename, FILE_WRITE);
+    if (debug) { Serial.print("Log file created! Log name: "); Serial.println(filename); }
     if(!logfile) {
       if (debug) { Serial.print("Couldnt create ");   Serial.println(filename); }
       error(FILE_INIT);
     }
 
-    
-    
+  // Write header to logfile
+    String header = "Time,Latitude,Longitude,Altitude,Pressure,Temperature,Acceleration,Acceleration (x),Acceleration (y),Acceleration (z)";
+    logfile.println(header);
+
+    now = latitude = longitude = altitude = pressure = temperature = accel = accel_x = accel_y = accel_z = String();
 }
 
 void loop() {
-  char c = GPS.read();
+  now = latitude = longitude = altitude = pressure = temperature = accel = accel_x = accel_y = accel_z = "";
+  sensors_event_t* accel_event;
+  sensors_event_t* mag_event;
+  sensors_event_t* bmp_event;
+  sensors_event_t* gyro_event;
+
+  accel.getEvent(accel_event);
+  mag.getEvent(mag_event);
+  bmp.getEvent(bmp_event);
+  gyro.getEvent(gyro_event);
+  
+  char c = gps.read();
   if (debug && c) Serial.print(c);
 
-  
-  
-  
+  if (gps.newMEAreceived()) {
+    gps.parse(gps.lastNMEA());
+  }
 
 
+  int hours = gps.hour + HOUR_OFFSET;
+  if (hours < 0)
+    hours = 24+hours;
+  if (hours > 23)
+    hours = 24-hours;
+  int minutes = gps.minute;
+  int seconds = gps.seconds;
 
-  
+  // HH:MM:SS
+  now += hours; now += ':'; now += minutes; now += ':'; now += seconds;
+  latitude = "DDMMSS W";
+  longitude = "DDDMMSS N";
+  altitude = String(bmp->pressureToAltitude(seaLevelPressure, bmp_event->pressure), 6);
+  pressure = String(bmp_event->pressure, 6);
+  temperature = String(bmp_event->temperature, 6);
+  accel_x = String(accel_event->acceleration->x, 6);
+  accel_y = String(accel_event->acceleration->y, 6);
+  accel_z = String(accel_event->acceleration->z, 6);
+  accel = sqrt( (accel_x ^ 2) + (accel_y ^ 2) + (accel_z ^ 2) );
+
+
+  /*
   // if a sentence is received, we can check the checksum, parse it...
-  if (GPS.newNMEAreceived()) {
-    char *stringptr = GPS.lastNMEA();
+  if (gps.newNMEAreceived()) {
+    char *stringptr = gps.lastNMEA();
     
-    if (!GPS.parse(stringptr))   // this also sets the newNMEAreceived() flag to false
+    if (!gps.parse(stringptr))   // this also sets the newNMEAreceived() flag to false
       return;  // we can fail to parse a sentence in which case we should just wait for another
 
     // Sentence parsed! 
-    if (!GPS.fix && debug) {
+    if (!gps.fix && debug) {
       Serial.print("No Fix");
       return;
     }
@@ -103,6 +150,7 @@ void loop() {
     if (stringsize != logfile.write((uint8_t *)stringptr, stringsize)) error(LOG_WRITE);
     if (strstr(stringptr, "RMC") || strstr(stringptr, "GGA")) logfile.flush();
   }
+  */
   
 }
 
