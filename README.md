@@ -15,6 +15,19 @@ To push:
 cd ~/Documents/SpaceView/
 git push 
 
+To install the Python libraries:
+
+Accelerometer:
+cd ~/Documents/SpaceView/Code/Python/lib
+git clone https://github.com/adafruit/Adafruit_Python_LSM303.git
+cd Adafruit_Python_LSM303
+sudo python setup.py install
+
+Temp/Baro/Alt:
+cd ~/Documents/SpaceView/Code/Python/lib
+git clone https://github.com/adafruit/Adafruit_Python_BMP.git
+cd Adafruit_Python_BMP
+sudo python setup.py install
 
 In order to run SpaceView.ino, you must install the free Arduino IDE:
 https://www.arduino.cc/en/Main/Software

@@ -1,5 +1,5 @@
-# Record all values from BMp180/LSM303/L3GD20H every 5 seconds
-# Author: John Barton 
+# Record all values from BMp180/LSM303/L3GD20H every 500 milliseconds
+# Author: John Barton & Erica Murphy
 # Last Modified 10/10/2016
  
 import time
