@@ -80,14 +80,12 @@ void setup() {
   }
 
   //Write header to logfile
-  logfile.println("Time,Latitude,Longitude,Altitude,Pressure,Temperature,Acceleration_x,Acceleration_y,Acceleration_z,Gyro_x,Gyro_y,Gyro_z");
+  logfile.println("Time (HH:MM:SS),Latitude (°),Longitude (°),Altitude (m),Pressure (hPa),Temperature (°C),Acceleration_x (gs),Acceleration_y (gs),Acceleration_z (gs),Gyro_x (rad/s),Gyro_y (rad/s),Gyro_z (rad/s)");
 
   //GPS Setup
-  gps.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
-  // Use a 1 hz, once a second, update rate.
-  gps.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
-  // Enable the interrupt to parse GPS data.
-  enableGPSInterrupt();
+  gps.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); //Minimum updates, only updates position and time
+  gps.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // Use a 1 hz, once a second, update rate.
+  enableGPSInterrupt(); // Enable the interrupt to parse GPS data.
 
   //setup_complete
   setup_complete();
