@@ -4,14 +4,15 @@
 #include <SoftwareSerial.h>
 
 #include <Adafruit_GPS.h>
+#include <Adafruit_BMP085_U.h>
+#include <Adafruit_LSM303_U.h>
+#include <Adafruit_L3GD20_U.h>
 #include <Adafruit_10DOF.h>
 
 #define tonePin 6
 #define errorFrequency 440 //Concert A
 #define chipSelect 10
 #define ledPin 13
-
-
 #define debug 1
 
 typedef enum {
@@ -21,6 +22,8 @@ typedef enum {
   LOG_WRITE = 4
   //List other errors here
 } Error;
+
+typedef uint16_t pitch;
 
 /* Assign a unique ID to the sensors */
 Adafruit_10DOF* dof;
@@ -58,10 +61,10 @@ void setup() {
     }
     
   // Opening file for log
-    char filename[13] = "GPSLOG00.csv";
+    String filename = "LOG00.csv";
     for (uint8_t i = 0; i < 100; i++) {
-      filename[6] = '0' + i/10;
-      filename[7] = '0' + i%10;
+      filename[3] = '0' + i/10;
+      filename[4] = '0' + i%10;
       // create if does not exist, do not open existing, write, sync after write
       if (!SD.exists(filename)) break;
     }
@@ -71,39 +74,89 @@ void setup() {
       error(FILE_INIT);
     }
 
+    //Write header to logfile
+    logfile.println("Time,Latitude,Longitude,Altitude,Pressure,Temperature,Acceleration,Acceleration (x),Acceleration (y),Acceleration (z)");
     
-    
+    //setup_complete
+    setup_complete();
 }
 
+//Read the sensors and writing to the logfile in lines
 void loop() {
-  char c = GPS.read();
-  if (debug && c) Serial.print(c);
 
-  
-  
-  
+    sensors_event_t event;      
+    float accel_x, accel_y, accel_z, accel_mag, pressure, pressure1, altitude, temp, Time, latitude, longitude, gyro_x, gyro_y, gyro_z;
+       
+    while(1){
 
+      //BMP085 sensor read
+      bmp->getEvent(&event);
+      temp = event.temperature;
+      pressure = event.pressure;
+      altitude = (1000000*(pow(pressure/101325,1/5.25588) + 1))/(2.25577);
 
+      //LSM303 sensor read
+      accel->getEvent(&event);
+      accel_x = event.acceleration.x;
+      accel_y = event.acceleration.y;
+      accel_z = event.acceleration.z;
+      accel_mag = sqrt( pow(accel_x, 2) + pow(accel_y, 2) + pow(accel_z, 2) );
 
-  
-  // if a sentence is received, we can check the checksum, parse it...
-  if (GPS.newNMEAreceived()) {
-    char *stringptr = GPS.lastNMEA();
-    
-    if (!GPS.parse(stringptr))   // this also sets the newNMEAreceived() flag to false
-      return;  // we can fail to parse a sentence in which case we should just wait for another
-
-    // Sentence parsed! 
-    if (!GPS.fix && debug) {
-      Serial.print("No Fix");
-      return;
+      //L3GD20 sensor read
+      gyro->getEvent(&event);
+      gyro_x = event.gyro.x;
+      gyro_y = event.gyro.y;
+      gyro_z = event.gyro.z;
+      
+      //Write to file
+      logfile.print(Time, latitude);
+      logfile.print(latitude);
+      logfile.print(longitude);
+      logfile.print(altitude);
+      logfile.print(pressure);
+      logfile.print(temp);
+      logfile.print(accel_mag);
+      logfile.print(accel_x);
+      logfile.print(accel_y);
+      logfile.println(accel_z);
+   
     }
-
-    uint8_t stringsize = strlen(stringptr);
-    if (stringsize != logfile.write((uint8_t *)stringptr, stringsize)) error(LOG_WRITE);
-    if (strstr(stringptr, "RMC") || strstr(stringptr, "GGA")) logfile.flush();
-  }
   
+}
+
+void setup_complete(void) {
+
+  pitch d5  = 587;
+  pitch c5  = 523;
+  pitch as4 = 466;
+  pitch f4  = 349;
+  pitch f5  = 698;
+  pitch ds5 = 622;
+  pitch cs5 = 554;
+  pitch gs4 = 415;
+  pitch gs5 = 831;
+  pitch as5 = 932;
+
+  int melody[] = {
+  d5,  d5,  c5, as4,  f4,  d5,
+  f5,  f5, ds5, cs5, gs4, ds5,
+  f5, gs5, as5
+    };
+
+  int noteDurations[] = {
+    4, 3, 1, 2, 4, 2,
+    4, 3, 1, 2, 4, 2,
+    14, 2, 9
+  };
+
+  for (int thisTone = 0; thisTone < 15; thisTone++) {
+    int noteDuration = 250 * noteDurations[thisTone];
+    tone(tonePin, melody[thisTone], noteDuration);
+
+    int pauseBetweenNotes = noteDuration / 2;
+    delay(pauseBetweenNotes);
+    noTone(tonePin);
+  }
 }
 
 void error(uint8_t errno) {
