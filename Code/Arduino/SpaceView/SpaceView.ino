@@ -82,6 +82,9 @@ void setup() {
   //Write header to logfile
   logfile.println("Time (HH:MM:SS),Latitude (°),Longitude (°),Altitude (m),Pressure (hPa),Temperature (°C),Acceleration_x (gs),Acceleration_y (gs),Acceleration_z (gs),Gyro_x (rad/s),Gyro_y (rad/s),Gyro_z (rad/s)");
 
+  //Print header to screen
+  Serial.println(F("Time (HH:MM:SS),Latitude (°),Longitude (°),Altitude (m),Pressure (hPa),Temperature (°C),Acceleration_x (gs),Acceleration_y (gs),Acceleration_z (gs),Gyro_x (rad/s),Gyro_y (rad/s),Gyro_z (rad/s)"));
+
   //GPS Setup
   gps.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); //Minimum updates, only updates position and time
   gps.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // Use a 1 hz, once a second, update rate.
@@ -148,6 +151,23 @@ void loop() {
   logfile.print(gyro_x); logfile.print(",");
   logfile.print(gyro_y); logfile.print(",");
   logfile.println(gyro_z); //Last row entry
+
+  //Print to screen
+  Serial.print(hours); Serial.print(F(":"));
+  Serial.print(minutes); Serial.print(F(":"));
+  Serial.print(seconds); Serial.print(F(","));
+  Serial.print(latitude); Serial.print(F(" ")); Serial.print(lat); Serial.print(F(","));
+  Serial.print(longitude); Serial.print(" "); Serial.print(lon); Serial.print(F(","));
+  Serial.print(longitude); Serial.print(F(","));
+  Serial.print(altitude); Serial.print(F(","));
+  Serial.print(pressure); Serial.print(F(","));
+  Serial.print(temp); Serial.print(F(","));
+  Serial.print(accel_x); Serial.print(F(","));
+  Serial.print(accel_y); Serial.print(F(","));
+  Serial.print(accel_z); Serial.print(F(","));
+  Serial.print(gyro_x); Serial.print(F(","));
+  Serial.print(gyro_y); Serial.print(F(","));
+  Serial.println(gyro_z); //Last row entry
 
 }
 
